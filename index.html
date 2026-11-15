@@ -390,6 +390,14 @@
     .project-model-note { font-size:10px;color:var(--dim);padding:0 15px 8px;line-height:1.7; }
     #btn-stop-answer { font-size:10px;color:var(--acc);padding:0 15px 9px;text-align:left; }
 
+
+    /* Preserve the reflective glass finish without stacking expensive live blur layers. */
+    .surface,.workflow-steps,.workspace-switch,.assistant-invite { -webkit-backdrop-filter:none;backdrop-filter:none; }
+    #workspace-topbar { -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px); }
+    #chat-drawer,#ai-guide { -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px); }
+    #analysis-progress { margin:0;font-size:11px;color:var(--muted); }
+    [aria-busy="true"] #g2-prob { opacity:.55; }
+    button:disabled { cursor:wait;opacity:.6; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -600,6 +608,7 @@
           <div class="lg:col-span-5 space-y-5">
             <div data-why="g2-odds" class="surface rounded-2xl p-5 space-y-4">
               <h2 class="step-heading"><span>2</span> Recovery outlook</h2>
+              <p id="analysis-progress" role="status" class="field-help" hidden></p>
               <div class="flex items-center justify-between text-xs"><span class="t-muted font-medium">Estimated recovery odds</span><span id="g2-qhat" class="font-mono t-dim tabular">q̂ = --</span></div>
               <div class="flex items-baseline gap-3"><span id="g2-prob" class="text-4xl font-bold font-mono tracking-tight t-main tabular">--%</span><span id="g2-lift" class="text-xs font-mono px-2 py-0.5 rounded-md surface-in t-muted tabular">--</span></div>
               <div id="g2-cset-box" class="rounded-xl p-3.5 surface-in"><div id="g2-cset-lbl" class="text-xs font-semibold t-main">Loading model...</div><p id="g2-cset-desc" class="text-xs t-muted mt-1"></p></div>
@@ -825,7 +834,7 @@ TX-110,1450,C,28,1200,1</textarea>
       </div>
 
       <div class="ai-scope">I explain and point. You stay in control of every action.</div>
-      <div id="project-model-note" class="project-model-note">App guidance is ready. Project AI connects through your server.</div>
+      <div id="project-model-note" class="project-model-note">Static demo · app guidance is ready. Open-ended Project AI needs a connected backend.</div>
       <div id="chat-status" role="status"></div><button type="button" id="btn-stop-answer" hidden>Stop answer</button>
       <form id="chat-form" class="p-3 flex gap-2" style="border-top:1px solid var(--bdr)">
         <input id="chat-input" aria-label="Ask VeriRail AI about the project" autocomplete="off" maxlength="4000" type="text" placeholder="Ask anything about VeriRail…" class="flex-1 rounded-xl field px-3 py-2 text-xs" />
@@ -859,10 +868,11 @@ TX-110,1450,C,28,1200,1</textarea>
     <div class="surface text-xs font-medium t-main px-3.5 py-2 rounded-xl shadow-lg" id="toast-text">Updated</div>
   </div>
 
+  <script src="./app-config.js"></script>
   <script type="module">
     // Load the existing model runtime when needed so app guidance survives a CDN failure.
 
-    const GOOGLE_CLIENT_ID = "PASTE_YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+    const GOOGLE_CLIENT_ID = "445487285145-3ak7p52c5rq1gn56fj5doini41t6itb3.apps.googleusercontent.com";
 
     let W = null, G2 = null, G1 = null, AUD = null;
     let extractor = null, g2Timer = null, lastSurge = 1.40, failuresList = [], activeRegime = 'all', lastGate2Res = null, lastGate1Res = null, lastScoredCsv = "";
@@ -1036,6 +1046,7 @@ TX-110,1450,C,28,1200,1</textarea>
     function setTab(id) {
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id === id));
       document.querySelectorAll(".tab-btn").forEach(b => { const on=b.getAttribute("data-tab")===id; b.className="tab-btn whitespace-nowrap px-3 py-1.5 rounded-lg font-medium cursor-pointer transition "+(on?"nav-on":"nav-off"); });
+      if(id!=="tab-lab"){labSequence++;labRunningKey="";}
       if (id === "tab-lab" && extractor) runNeuralLab();
     }
 
@@ -1060,10 +1071,99 @@ TX-110,1450,C,28,1200,1</textarea>
       return `PROTOTYPE — This project is a prototype and is not financial or legal advice.\n======================================================================\nDate: [DATE]\nTo: Dispute Department — ${co}\nProduct: ${pr} | Framework: ${law} (${daysTxt})\n\nRE: FORMAL DISPUTE & REMEDIATION REQUEST\nAccount / Ticket: [ACCOUNT OR TICKET #]\n\nSUMMARY:\n${clean}\n\nCHECKLIST:\n[${ev[0]>0?"x":" "}] Disputed dollar amount\n[${ev[1]>0?"x":" "}] Transaction date\n[${ev[2]>0?"x":" "}] Prior ticket reference\n[${ev[3]>0?"x":" "}] Statements / receipts attached\n\nPlease investigate under ${law} and restore the disputed funds.\n\n[YOUR NAME]\n[CONTACT]\n\nVeriRail Telemetry: ${prob} | ${cset}`;
     }
 
-    async function getVec(txt) { const out = await extractor(txt, { pooling: 'cls', normalize: true }); return Array.from(out.data); }
+const EMBEDDING_WORKER_SOURCE="let model=null,ready=null,queue=Promise.resolve();\nself.onmessage=({data})=>{\n  const {id,kind,text}=data;\n  if(kind==='init'){\n    ready=(async()=>{\n      const {pipeline,env}=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.1');\n      env.allowLocalModels=false;\n      env.backends.onnx.wasm.numThreads=1;\n      model=await pipeline('feature-extraction','Xenova/bge-small-en-v1.5',{dtype:'q8'});\n      self.postMessage({id,ok:true});\n    })().catch(error=>{self.postMessage({id,ok:false,error:String(error.message||error)});throw error;});\n    ready.catch(()=>{});\n    return;\n  }\n  queue=queue.then(async()=>{\n    try{\n      await ready;\n      const out=await model(text,{pooling:'cls',normalize:true});\n      self.postMessage({id,ok:true,values:Array.from(out.data)});\n    }catch(error){self.postMessage({id,ok:false,error:String(error.message||error)});}\n  });\n};\n";
+    let embeddingWorker=null,embeddingSequence=0;
+    const embeddingRequests=new Map(),embeddingCache=new Map();
+    async function createBackgroundExtractor(){
+      const url=URL.createObjectURL(new Blob([EMBEDDING_WORKER_SOURCE],{type:'text/javascript'}));
+      try{embeddingWorker=new Worker(url,{type:'module'});}finally{URL.revokeObjectURL(url);}
+      embeddingWorker.onmessage=({data})=>{
+        const request=embeddingRequests.get(data.id);if(!request)return;
+        embeddingRequests.delete(data.id);
+        data.ok?request.resolve(data.values||[]):request.reject(new Error(data.error||'Analysis worker failed'));
+      };
+      embeddingWorker.onerror=()=>{
+        for(const request of embeddingRequests.values())request.reject(new Error('Analysis worker could not load'));
+        embeddingRequests.clear();embeddingWorker?.terminate();embeddingWorker=null;
+      };
+      await requestEmbedding('init');
+      return async text=>({data:await requestEmbedding('embed',text)});
+    }
+    function requestEmbedding(kind,text){
+      return new Promise((resolve,reject)=>{
+        if(!embeddingWorker){reject(new Error('Analysis model is unavailable'));return;}
+        const id=++embeddingSequence;embeddingRequests.set(id,{resolve,reject});
+        embeddingWorker.postMessage({id,kind,text});
+      });
+    }
+    async function getVec(txt){
+      if(embeddingCache.has(txt)){
+        const value=embeddingCache.get(txt);embeddingCache.delete(txt);embeddingCache.set(txt,value);return value;
+      }
+      const result=(async()=>{const out=await extractor(txt,{pooling:'cls',normalize:true});return Array.from(out.data);})();
+      embeddingCache.set(txt,result);
+      if(embeddingCache.size>128)embeddingCache.delete(embeddingCache.keys().next().value);
+      try{return await result;}catch(error){if(embeddingCache.get(txt)===result)embeddingCache.delete(txt);throw error;}
+    }
+
     const scoreVecDetailed = (zTxt, tabRaw) => forwardGate2Detailed(zTxt, tabRaw.map((v, i) => (v - G2.mu[i]) / G2.sd[i]));
 
-    async function runGate2() {
+    let g2Revision=0,g2Pending=false,g2Loop=null,g2Running=false;
+    let g1Frame=null,comparatorFrame=null,railsTimer=null;
+    let labSequence=0,labCompleteKey='',labRunningKey='';
+    function analysisStatus(message,busy){
+      document.getElementById('analysis-progress').textContent=message;
+      document.getElementById('analysis-progress').hidden=!message;
+      document.querySelector('[data-why="g2-odds"]').setAttribute('aria-busy',String(busy));
+      for(const id of ['btn-save-case','btn-parity-test','btn-copy-brief'])document.getElementById(id).disabled=busy;
+    }
+    function invalidateAnalysis(){
+      g2Revision++;g2Pending=false;labSequence++;labCompleteKey='';
+      analysisStatus('Updating after you finish typing…',true);
+    }
+    function scheduleGate2(){
+      invalidateAnalysis();clearTimeout(g2Timer);
+      g2Timer=setTimeout(runGate2,750);
+    }
+    function runGate2(){
+      clearTimeout(g2Timer);g2Revision++;g2Pending=true;
+      if(!g2Loop){
+        g2Loop=(async()=>{
+          try{
+            while(g2Pending){
+              g2Pending=false;const revision=g2Revision;
+              g2Running=true;analysisStatus(extractor?'Updating your analysis…':'Loading the analysis model…',true);
+              let succeeded=false;
+              try{await runGate2Now(revision);succeeded=true;}
+              catch(error){if(revision===g2Revision)analysisStatus('Analysis could not finish. Edit the case to try again.',true);}
+              finally{g2Running=false;}
+              if(revision===g2Revision&&extractor&&succeeded){
+                analysisStatus('',false);
+                if(document.getElementById('tab-lab').classList.contains('active'))runNeuralLab();
+              }
+            }
+          }finally{g2Loop=null;}
+        })();
+      }
+      return g2Loop;
+    }
+    function scheduleGate1(){if(g1Frame!==null)return;g1Frame=requestAnimationFrame(()=>{g1Frame=null;runGate1();});}
+    function scheduleComparator(){if(comparatorFrame!==null)return;comparatorFrame=requestAnimationFrame(()=>{comparatorFrame=null;renderRailComparator();});}
+    function scheduleRailsTable(){clearTimeout(railsTimer);railsTimer=setTimeout(renderRailsTable,100);}
+    async function runNeuralLab(){
+      const result=lastGate2Res;
+      if(!extractor||!result?.zClean||!document.getElementById('tab-lab').classList.contains('active'))return;
+      if(document.querySelector('[data-why="g2-odds"]').getAttribute('aria-busy')==='true'){document.getElementById('lab-saliency-box').textContent='Waiting for the current case analysis…';return;}
+      const key=JSON.stringify([result.company,result.product,result.masked]);
+      if(labCompleteKey===key||labRunningKey===key)return;
+      const sequence=++labSequence;labRunningKey=key;
+      const current=()=>sequence===labSequence&&lastGate2Res===result&&document.getElementById('tab-lab').classList.contains('active');
+      try{await runNeuralLabNow(current,result);if(current())labCompleteKey=key;}
+      catch(error){if(current())document.getElementById('lab-saliency-box').textContent='The explanation could not finish. Choose Run to try again.';}
+      finally{if(sequence===labSequence&&labRunningKey===key)labRunningKey='';}
+    }
+
+    async function runGate2Now(revision) {
       if (!G2 || !W) return;
       const company = document.getElementById("g2-company").value, product = document.getElementById("g2-product").value;
       const raw = document.getElementById("g2-narrative").value, clean = piiScrub(raw);
@@ -1092,6 +1192,7 @@ TX-110,1450,C,28,1200,1</textarea>
       }
 
       const zClean = clean ? await getVec(clean) : null;
+      if(revision!==g2Revision)return;
       const det = zClean ? scoreVecDetailed(zClean, cs.concat(ev)) : { p: baseRate, gam: new Array(128).fill(1), bet: new Array(128).fill(0) };
       const p = det.p, qHat = Math.max(G2.q_thresholds["0"], G2.q_thresholds["1"]);
       document.getElementById("g2-prob").textContent = `${(p*100).toFixed(1)}%`;
@@ -1128,7 +1229,9 @@ TX-110,1450,C,28,1200,1</textarea>
       const cfRows = [];
       for (const [title, tag, clause, already] of candidates) {
         if (already) { cfRows.push(`<div class="rounded-xl surface-in p-3 flex items-center justify-between gap-3"><span class="text-xs t-dim truncate">${esc(title)}</span><span class="text-xs font-medium t-acc">Included ✓</span></div>`); continue; }
-        const pCf = await predText(piiScrub((raw.trim() + clause).trim())), dpp = (pCf - p) * 100, cfSet = getSet(pCf);
+        const pCf = await predText(piiScrub((raw.trim() + clause).trim()));
+        if(revision!==g2Revision)return;
+        const dpp = (pCf - p) * 100, cfSet = getSet(pCf);
         const flip = (csNow !== "LIKELY" && cfSet === "LIKELY") ? `<span class="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">→ {1}</span>` : ((csNow === "UNLIKELY" && cfSet !== "UNLIKELY") ? `<span class="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">→ {0,1}</span>` : "");
         cfRows.push(`<div class="rounded-xl surface-in p-3 flex items-center justify-between gap-3"><div class="min-w-0"><div class="text-xs font-medium t-main truncate">${esc(title)}${flip}</div><div class="font-mono text-xs t-muted tabular"><b>${(pCf*100).toFixed(1)}%</b> <span class="${dpp>=0?"t-acc":"t-dim"}">(${dpp>=0?"+":""}${dpp.toFixed(1)} pp)</span></div></div><button type="button" data-clause="${esc(clause)}" class="cf-btn shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold btn-pri cursor-pointer">+ Apply</button></div>`);
       }
@@ -1136,9 +1239,9 @@ TX-110,1450,C,28,1200,1</textarea>
       document.querySelectorAll(".cf-btn").forEach(b => b.addEventListener("click", () => { const ta=document.getElementById("g2-narrative"); ta.value=(ta.value.trim()+b.getAttribute("data-clause")).trim(); runGate2(); toast("Applied"); }));
     }
 
-    async function runNeuralLab() {
+    async function runNeuralLabNow(isCurrent, result) {
       if (!extractor || !lastGate2Res || !lastGate2Res.zClean) return;
-      const { company, product, masked, zClean, det, ev, pVal } = lastGate2Res;
+      const { company, product, masked, zClean, det, ev, pVal } = result;
       document.getElementById("lab-co-lbl").textContent = company;
       document.getElementById("lab-prod-lbl").textContent = product;
 
@@ -1172,8 +1275,10 @@ TX-110,1450,C,28,1200,1</textarea>
       const salHtml = [];
       for (let k = 0; k < chunks.length; k++) {
         const without = chunks.filter((_, idx) => idx !== k).join(" ") || " ";
+        if(!isCurrent())return;
         const zWithout = await getVec(without);
-        const pWithout = scoreVecDetailed(zWithout, lastGate2Res.cs.concat(extractEv(without))).p;
+        if(!isCurrent())return;
+        const pWithout = scoreVecDetailed(zWithout, result.cs.concat(extractEv(without))).p;
         const contrib = (pVal - pWithout) * 100;
         const cls = contrib >= 0.4 ? "pill-acc" : (contrib <= -0.4 ? "bg-rose-50 border border-rose-200 text-rose-800 dark:bg-rose-500/15 dark:border-rose-500/35 dark:text-rose-200" : "surface-in t-muted");
         salHtml.push(`<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${cls}"><span>${esc(chunks[k])}</span><span class="font-mono text-[11px] opacity-85">${contrib>=0?"+":""}${contrib.toFixed(1)}</span></span>`);
@@ -1550,11 +1655,26 @@ TX-110,1450,C,28,1200,1</textarea>
     let projectPending=null;
     let projectHealthChecked=false;
     const projectConversation=[];
+    // Static Spaces host browser code only. This public value is a backend URL, never an API key.
+    function projectApiBase(){
+      const value=window.huggingface?.variables?.VERIRAIL_API_BASE||window.VERIRAIL_CONFIG?.apiBase||'';
+      if(!value)return '';
+      const url=new URL(String(value));
+      const local=['127.0.0.1','localhost','[::1]'].includes(url.hostname);
+      if((url.protocol!=='https:'&&!(local&&url.protocol==='http:'))||url.username||url.password||url.search||url.hash||url.pathname!=='/')throw new Error('Invalid project API base URL');
+      return url.origin;
+    }
     async function checkProjectConnection(){
       if(projectHealthChecked)return;projectHealthChecked=true;
-      try{const response=await fetch('/api/health');const status=response.ok?await response.json():{};document.getElementById('project-model-note').textContent=status.project_ai_configured?'Project AI is configured · project questions use the connected AI service':'Project AI is not connected yet. App guidance is available.';}
-      catch{document.getElementById('project-model-note').textContent='Project AI is not connected yet. App guidance is available.';}
+      try{
+        const base=projectApiBase();
+        if(!base){document.getElementById('project-model-note').textContent='Static demo · app guidance is ready. Open-ended Project AI needs a connected backend.';return;}
+        const response=await fetch(base+'/api/health',{credentials:'omit'});
+        const status=response.ok?await response.json():{};
+        document.getElementById('project-model-note').textContent=status.project_ai_configured?'Project AI is configured · questions use the connected AI service':'Project AI is not connected yet. App guidance is available.';
+      }catch{document.getElementById('project-model-note').textContent='Project AI is not connected yet. App guidance is available.';}
     }
+
     const PROJECT_FACTS=[
       ['overview invention consumer business', 'VeriRail is a financial freeze and dispute protection prototype for consumers and businesses. Recovery likelihood uses consumer complaint history, the incident description and evidence signals. Payment risk uses transaction features. Tools compare historical provider outcomes and produce dispute-letter drafts, case briefs, case snapshots, audit results and model explanations. The app cannot access real accounts, freeze or release funds, submit payments, send letters, or guarantee outcomes.'],
       ['model neural architecture training dataset accuracy fairness bias audit', 'The supplied notebook trains Gate 2 on Bob-68/cfpb-consumer-complaints from Hugging Face and Gate 1 on IEEE-CIS fraud-detection transaction data from Kaggle. Gate 2 embeds a masked description with bge-small-en-v1.5, then combines text and provider/evidence features using FiLM. Gate 1 uses exported neural weights on payment features. Audit evaluates benchmarks and false positives. Protected demographics and the remote/digital proxy are not used as VeriRail payment inference inputs; omission does not prove universal fairness. Spectral-GRL and dCor are debiasing techniques in the project.'],
@@ -1602,7 +1722,8 @@ TX-110,1450,C,28,1200,1</textarea>
       document.getElementById('chat-status').textContent='Thinking about your project…';
       const timeout=setTimeout(()=>controller.abort(),70000);
       try{
-        const response=await fetch('/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request),signal:controller.signal});
+        const base=projectApiBase();if(!base)throw new Error('Project AI backend not configured');
+        const response=await fetch(base+'/api/assistant',{method:'POST',credentials:'omit',headers:{'Content-Type':'application/json'},body:JSON.stringify(request),signal:controller.signal});
         if(!response.ok)throw new Error('Project AI unavailable');
         const result=await response.json();
         if(typeof result.in_scope!=='boolean'||typeof result.answer!=='string')throw new Error('Invalid project AI response');
@@ -1953,9 +2074,7 @@ TX-110,1450,C,28,1200,1</textarea>
       renderAudit(); runGate1(); renderRailComparator(); renderRailsTable(); await runGate2();
 
       try {
-        const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.1');
-        env.allowLocalModels = false;
-        extractor = await pipeline('feature-extraction', 'Xenova/bge-small-en-v1.5', { dtype: 'q8' });
+        extractor = await createBackgroundExtractor();
       } catch (error) {
         document.getElementById('api-dot').className = 'w-1.5 h-1.5 rounded-full bg-amber-400';
         document.getElementById('api-label').textContent = 'Text model unavailable';
@@ -1963,7 +2082,7 @@ TX-110,1450,C,28,1200,1</textarea>
         document.getElementById('g2-cset-desc').textContent = 'Check your connection and reload to calculate recovery odds. Payment tools and app guidance are available.';
         return;
       }
-      await embedChatIntents();
+      // The project assistant uses hosted/documented guidance; no unused intent embeddings at startup.
       document.getElementById("api-dot").className = "w-1.5 h-1.5 rounded-full bg-emerald-500";
       document.getElementById("api-label").textContent = "AI Ready";
       await runGate2();
@@ -1989,7 +2108,7 @@ TX-110,1450,C,28,1200,1</textarea>
     document.querySelectorAll(".tab-btn").forEach(b => b.addEventListener("click", () => setTab(b.getAttribute("data-tab"))));
     document.getElementById("g2-company").addEventListener("change", runGate2);
     document.getElementById("g2-product").addEventListener("change", runGate2);
-    document.getElementById("g2-narrative").addEventListener("input", () => { clearTimeout(g2Timer); g2Timer = setTimeout(runGate2, 420); });
+    document.getElementById("g2-narrative").addEventListener("input", scheduleGate2);
     document.getElementById("g2-days").addEventListener("input", () => updateEscalation(document.getElementById("g2-product").value, lastGate2Res ? lastGate2Res.csNow : "UNCERTAIN"));
     document.getElementById("ex-paypal").addEventListener("click", () => { document.getElementById("g2-company").value="Paypal Holdings, Inc"; document.getElementById("g2-product").value="Money transfer, virtual currency, or money service"; document.getElementById("g2-narrative").value="On 10/12/2026 my business account on card 4532-8910-2234-9901 was frozen with $1,400.00 held without explanation."; runGate2(); });
     document.getElementById("ex-chase").addEventListener("click", () => { document.getElementById("g2-company").value="JPMORGAN CHASE & CO."; document.getElementById("g2-product").value="Checking or savings account"; document.getElementById("g2-narrative").value="An unauthorized wire on 09/18/2026 removed $2,350.00 from checking. Attached statement and support ticket #88412 were ignored."; runGate2(); });
@@ -2027,7 +2146,7 @@ TX-110,1450,C,28,1200,1</textarea>
     document.getElementById("batch-file-input").addEventListener("change", e => { const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=ev=>{document.getElementById("batch-csv-input").value=ev.target.result;runCsvBatch();}; r.readAsText(f); });
     document.getElementById("btn-dl-csv").addEventListener("click", () => { if(!lastScoredCsv)runCsvBatch(); const a=document.createElement("a"); a.download="verirail_batch.csv"; a.href=URL.createObjectURL(new Blob([lastScoredCsv],{type:"text/csv"})); a.click(); });
 
-    ["g1-amt","g1-pcd","g1-nonlocal","g1-cnt","g1-avg","g1-surge"].forEach(id => { document.getElementById(id).addEventListener("input", runGate1); document.getElementById(id).addEventListener("change", runGate1); });
+    ["g1-amt","g1-pcd","g1-nonlocal","g1-cnt","g1-avg","g1-surge"].forEach(id => { document.getElementById(id).addEventListener("input", scheduleGate1); document.getElementById(id).addEventListener("change", scheduleGate1); });
     document.querySelectorAll(".g1-preset").forEach(b => b.addEventListener("click", () => { document.getElementById("g1-amt").value=b.getAttribute("data-amt"); runGate1(); }));
 
     document.getElementById("btn-cmp-demo").addEventListener("click", () => {
@@ -2036,8 +2155,8 @@ TX-110,1450,C,28,1200,1</textarea>
       if (G2.products.includes("Money transfer, virtual currency, or money service")) document.getElementById("cmp-product").value = "Money transfer, virtual currency, or money service";
       renderRailComparator(); renderRailsTable();
     });
-    ["cmp-rail-a","cmp-rail-b","cmp-product","cmp-amt","cmp-pcd"].forEach(id => { document.getElementById(id).addEventListener("change", () => { renderRailComparator(); renderRailsTable(); }); document.getElementById(id).addEventListener("input", renderRailComparator); });
-    document.getElementById("rails-search").addEventListener("input", renderRailsTable);
+    ["cmp-rail-a","cmp-rail-b","cmp-product","cmp-amt","cmp-pcd"].forEach(id => { document.getElementById(id).addEventListener("change", () => { renderRailComparator(); renderRailsTable(); }); document.getElementById(id).addEventListener("input", scheduleComparator); });
+    document.getElementById("rails-search").addEventListener("input", scheduleRailsTable);
     document.getElementById("rails-sort").addEventListener("change", renderRailsTable);
     document.querySelectorAll(".regime-btn").forEach(b => b.addEventListener("click", () => { activeRegime=b.getAttribute("data-regime"); document.querySelectorAll(".regime-btn").forEach(x=>x.className="regime-btn px-2.5 py-1 rounded-lg text-xs surface-in t-muted cursor-pointer"); b.className="regime-btn px-2.5 py-1 rounded-lg text-xs btn-pri cursor-pointer"; renderRailsTable(); }));
 

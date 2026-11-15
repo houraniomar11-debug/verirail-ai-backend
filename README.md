@@ -1,46 +1,59 @@
-# VeriRail — refined UI and project assistant
+# VeriRail AI
 
-The approved layout is preserved. This update adds a stronger glass finish, clearer AI targeting, a simpler **Next steps** panel, and a prepared hosted-AI connection for open-ended project conversations.
+**Track: AI + Finance | Project route: Our own idea**
 
-## Run
+This project is a prototype and is not financial advice.
 
-From this folder, run `python server.py` (or `py server.py` on Windows), then open http://127.0.0.1:8080. `Start-VeriRail.cmd` is also included. Keep `index.html` beside `artifacts`.
+VeriRail connects payment-risk simulation with evidence-aware financial-dispute preparation. The six tools are Dispute Recovery, Payment Triage, Safe Rails, Neural Lab, Audit, and QR & System. A scoped assistant explains the project and can highlight a relevant control without performing an action.
 
-The existing financial models and app guidance work without a hosted API key. Internet access is still needed for the original Tailwind runtime, fonts, Google integration, and recovery text model. Google sign-in still requires the original Google client-ID configuration.
+## Run the application
 
-## Activate hosted project AI
+Python 3.10+ is sufficient for this server. From the repository folder:
 
-**The connection is implemented, but no API key is configured.** Follow [AI_SETUP.md](AI_SETUP.md): copy `.env.example` to `.env`, set `OPENAI_API_KEY`, then run `server.py`. The key stays on the server; never put it in `index.html` or share `.env`.
+```sh
+python server.py
+```
 
-The backend uses OpenAI’s [Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create) with [structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses). The default model is `gpt-4.1-mini`, configurable with `OPENAI_MODEL`. Usage is billed to the configured provider account. No credentials are included, and no real hosted-model request was made during this update.
+Open **http://127.0.0.1:8080**, choose **Continue as Guest**, and wait for **AI Ready**. On Windows, Start-VeriRail.cmd is also included. The browser downloads runtime/model assets, so internet access is needed for the recovery text encoder and external scripts. Core scoring and local guidance do not need an OpenAI key. See [AI_SETUP.md](AI_SETUP.md) for optional open-ended Project AI.
 
-The assistant can discuss any aspect of this project: explanations, summaries, comparisons, examples, drafts, model behavior, limitations, implementation, or ideas. It is not restricted to where/when/why templates. The server supplies project documentation, known controls, and relevant masked workspace context. Unknown project details should be identified as unknown instead of invented.
+## Judge walkthrough
 
-Common unrelated everyday questions are rejected before contacting the provider. The hosted model also checks scope. Out-of-scope replies are normalized to exactly:
+1. Use a supplied synthetic dispute example. Show the privacy preview, estimate, and uncertainty note.
+2. Review an evidence signal and open the draft letter. The user can copy/download, edit externally, and send it through an official channel.
+3. Open Payment Triage and change a scenario input. Clear, Step-Up, and Block are simulations.
+4. Compare historical provider context in Safe Rails and inspect model sensitivity in Neural Lab.
+5. Open Audit and review baselines, subgroup diagnostics, and selected model failures.
+6. Ask a local guidance question and use its visual pointer. Hosted project answers require the optional backend configuration.
 
-> Out of context, could you be more clear?
+The app does not connect to bank accounts, freeze/release funds, execute payments, submit disputes, or guarantee refunds. Snapshots and prototype accounts use browser storage.
 
-Unrelated questions do not spawn a cursor. If Project AI is unavailable or not configured, ordinary app guidance remains available, and the interface reports the connection state honestly.
+## Methods and reported results
 
-## Changes
+The saved notebook reports 9,659 filtered CFPB complaints for recovery and a 120,000-row IEEE-CIS payment configuration. It uses chronological 65/15/20 training/calibration/test splits. A frozen BGE text encoder feeds a FiLM recovery classifier; a separate neural head scores payment features. Training includes proxy adversaries and a distance-dependence penalty, followed by calibration.
 
-- Stronger frosted glass, soft reflections, and translucent nested surfaces, with readable input backgrounds. The true black theme and approved layout remain.
-- A more visible pointer, corner markers, and a label naming the highlighted control. “Go to highlighted control” focuses without activating it. Escape dismisses guidance.
-- The ambiguous “3 · Your action plan” heading is now **Next steps**. The numbers indicate workflow steps, not years.
-- Three direct actions: review the case and actual evidence; open a letter draft; save the result and keep references. Timing and the original framework/escalation suggestions remain in a collapsed section.
-- A plain incident-day count replaces the blanket countdown badge. The original framework suggestions remain available for review.
-- Hosted project chat, recent conversation context, a stop-answer control, and clear connection/error states.
+| Reported measure | Baseline | Full model |
+| --- | --- | --- |
+| Recovery average precision | 0.3198, TF-IDF/XGBoost | 0.3504 |
+| Recovery precision / recall | 0.301 / 0.469 | 0.319 / 0.634 |
+| Payment average precision | 0.2233, XGBoost | 0.2929 |
+| Non-local false-block rate | 3.04%, XGBoost | 7.00% |
 
-## Data and deployment
+These are single-run saved retrospective results, not an independent rerun or live-bank performance. The recovery full model has Brier score 0.0982, worse than the trailing-rate baseline's 0.0781. Subgroup coverage is 88.6% and 92.4%, not a universal 90% guarantee. Payment precision/recall were not exported. The full report describes temporal-label-availability limitations, simplified browser features, conversion-parity gaps, and the selected failure cases.
 
-Financial scoring still runs in-browser with the original model files. Accounts and snapshots still use the prototype’s browser storage. Hosted chat sends the question, recent conversation, and relevant workspace context to the configured AI provider through `server.py`. Known card, SSN, and email patterns are masked; this is not a complete privacy guarantee. Remove unnecessary personal details before chatting.
+## Submission documents and reproducibility
 
-The server binds to localhost by default and does not expose keys or backend files as static assets. For public deployment, use platform secret storage, HTTPS, and appropriate server-side authentication. The original browser-account system is still a prototype; UI polish does not change that architecture.
+- [One-page write-up](docs/Submission-Write-Up.pdf)
+- [Anonymous technical report](docs/Technical-Report.pdf)
+- [Training notebook with saved outputs](train/VeriRail_AI_Training.ipynb)
+- [Complete sources and AI credits](CREDITS.md)
+- [Saved evaluation](artifacts/audit_results.json)
 
-## Validation
+The training notebook uses public datasets, needs authorized dataset access, and does not pin every package or dataset revision. The application uses supplied browser weights and metadata. Raw datasets and private credentials are not included. Read the full report before interpreting the benchmark or legal/timing templates.
 
-All six tools, seven supporting files, and 154 original element IDs remain. Supporting files were compared byte for byte with the original ZIP. Scoring, inference, simulation, comparison, and audit functions are unchanged.
+## Credits and AI assistance
 
-Browser checks covered desktop/phone layouts, dark mode, glass styling, all tools, CSV scoring, letter controls, provider comparison, pointer alignment/focus, next-step draft/save actions, scope rejection, cancellation, and model-unavailable fallback. The original recovery model ran successfully.
+The project uses the CFPB dataset through Bob-68's Hugging Face mirror; IEEE-CIS transaction data; BAAI BGE and the Xenova browser conversion; PyTorch, Sentence Transformers, scikit-learn, XGBoost, Transformers.js, and the established methods linked in CREDITS.md. ChatGPT/Codex supported documented UI, assistant, debugging, performance, media, and writing work. The team is responsible for understanding and explaining the submission. No affiliation with a bank or automatic recovery service is claimed.
 
-Hosted-connection tests used a **simulated provider** to verify request/response handling, recent history, masked context, exact scope replies, valid targets, key isolation, missing-key behavior, malformed replies, origin checks, and request limits. A real hosted answer remains unverified until a key is configured. Experimental browser language models were rejected after inaccurate answers; they are not shipped or downloaded by this version.
+## This repository update
+
+This kit uses the optimized frontend. The server allows the new public app-config.js file, and the configuration connects local full-app use to the same-origin server. On a Static Space, use a separately configured optional backend. Model, training, and audit artifacts are preserved. A safe .env.example and .gitignore are included; never upload a populated .env.
