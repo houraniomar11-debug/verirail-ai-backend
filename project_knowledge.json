@@ -1,0 +1,296 @@
+{
+  "project": "VeriRail",
+  "facts": [
+    {
+      "topics": "overview invention consumer business",
+      "facts": "VeriRail is a financial freeze and dispute protection prototype for consumers and businesses. Recovery likelihood uses consumer complaint history, the incident description and evidence signals. Payment risk uses transaction features. Tools compare historical provider outcomes and produce dispute-letter drafts, case briefs, case snapshots, audit results and model explanations. The app cannot access real accounts, freeze or release funds, submit payments, send letters, or guarantee outcomes."
+    },
+    {
+      "topics": "model neural architecture training dataset accuracy fairness bias audit",
+      "facts": "The supplied notebook trains Gate 2 on Bob-68/cfpb-consumer-complaints from Hugging Face and Gate 1 on IEEE-CIS fraud-detection transaction data from Kaggle. Gate 2 embeds a masked description with bge-small-en-v1.5, then combines text and provider/evidence features using FiLM. Gate 1 uses exported neural weights on payment features. Audit evaluates benchmarks and false positives. Protected demographics and the remote/digital proxy are not used as VeriRail payment inference inputs; omission does not prove universal fairness. Spectral-GRL and dCor are debiasing techniques in the project."
+    },
+    {
+      "topics": "score odds uncertainty estimate recovery baseline relief surge conformal",
+      "facts": "Recovery odds estimate likelihood of relief, not a dollar refund. Provider baseline is historical adjusted relief for the selected product. Harm Surge compares recent and longer-period complaint activity. The uncertainty note can be likely, unlikely, or uncertain; historical conformal coverage is not an individual guarantee. Provider and evidence comparison effects are separate and are not additive."
+    },
+    {
+      "topics": "payment triage transaction risk step-up clear block csv split",
+      "facts": "Payment Triage scores a scenario from amount, channel, history, and surge. Clear, Step-Up, and Block are simulated decisions, not live provider instructions. Step-Up suggests more verification. CSV Batch accepts payment rows with id,amount,channel,past_txns,past_avg,remote. It is not a document uploader. Split Check is a simulation, not permission to evade provider checks."
+    },
+    {
+      "topics": "case evidence receipt document narrative dispute letter steps action plan deadline",
+      "facts": "Next steps are: check the incident description and actual evidence; prepare and review a letter draft; send it yourself through the provider’s official dispute channel; save a snapshot and keep references and responses. There is no three-year plan. The 1,2,3 numbers are workflow steps. Only apply suggested evidence clauses if true. There is no receipt upload or document verification. The original framework and escalation suggestions are under Timing & escalation; actual deadlines depend on the incident and rules and must be confirmed."
+    },
+    {
+      "topics": "privacy security data saved workspace login sign-in authentication",
+      "facts": "Recognized dates, card numbers, SSNs, and email patterns are masked in-browser before embedding, but pattern matching can miss personal data. Account and snapshot storage uses browser localStorage and is not production-grade server authentication or encrypted multi-device storage. Google sign-in needs an OAuth client ID. Financial scoring runs in-browser. Open-ended Project AI sends the question, recent chat, and relevant masked workspace context through the app server to its configured AI provider. The provider key stays on the server. The user should remove unnecessary personal details."
+    },
+    {
+      "topics": "safe rails bank provider compare diversification business",
+      "facts": "Safe Rails compares provider history for the selected product using adjusted relief and surge measures and includes a diversification simulation. These are retrospective/model comparisons, not a ranking of current rates, fees, all banks, or guarantees that a provider is safe."
+    },
+    {
+      "topics": "features design interface themes mobile cursor qr accessibility",
+      "facts": "The six tools are Dispute Recovery, Payment Triage, Safe Rails, Neural Lab, Audit, and QR & System. Sidebar navigation, a mobile menu, light and black dark themes, Inspect, and a non-clicking AI pointer help users. QR codes share a hosted app URL. Snapshot, Copy Brief, Draft letter, Bias Check, CSV download, and QR download retain their original controls. The pointer only navigates, highlights, and focuses a known control; it does not fill, click, send, or pay for the user."
+    }
+  ],
+  "controls": [
+    {
+      "id": "appearance",
+      "section": "tab1",
+      "title": "Change the appearance",
+      "action": "Use the theme button in the top header to switch light or dark mode."
+    },
+    {
+      "id": "account",
+      "section": "tab1",
+      "title": "Manage your workspace",
+      "action": "Open the workspace button in the top header. Choose Switch Account / Sign Out to return to the sign-in screen."
+    },
+    {
+      "id": "privacy",
+      "section": "tab1",
+      "title": "Review the privacy preview",
+      "action": "Review the masked model input below the description. Remove unnecessary personal details from your description yourself. Saved snapshots stay in this browser workspace."
+    },
+    {
+      "id": "brief",
+      "section": "tab1",
+      "title": "Copy the case brief",
+      "action": "Choose “Copy Brief” and paste it into your own document. Review it before sharing."
+    },
+    {
+      "id": "bias-check",
+      "section": "tab1",
+      "title": "Run a bias check",
+      "action": "Choose “Bias Check” beside the case actions, then read the comparison that appears below."
+    },
+    {
+      "id": "start",
+      "section": "tab1",
+      "title": "Start with your provider",
+      "action": "Choose the provider and product involved, then describe what happened."
+    },
+    {
+      "id": "g2-provider",
+      "section": "tab1",
+      "title": "Choose a provider and product",
+      "action": "Select the company involved and the product below it."
+    },
+    {
+      "id": "g2-narrative",
+      "section": "tab1",
+      "title": "Describe what happened",
+      "action": "Replace the sample with your account of the incident. Include the date, amount, case reference, and documents you actually have."
+    },
+    {
+      "id": "g2-days",
+      "section": "tab1",
+      "title": "Set the time since the incident",
+      "action": "Move the slider to the number of days since the incident. Check the relevant rules for your product; the prototype’s timing prompts are not a confirmed deadline."
+    },
+    {
+      "id": "g2-odds",
+      "section": "tab1",
+      "title": "Understand your recovery estimate",
+      "action": "Read the percentage and uncertainty note, then check Missing Evidence for useful next steps."
+    },
+    {
+      "id": "g2-cset",
+      "section": "tab1",
+      "title": "Read the uncertainty note",
+      "action": "Review the note alongside the percentage. Add accurate supporting evidence if it is available."
+    },
+    {
+      "id": "g2-cfs",
+      "section": "tab1",
+      "title": "Review missing evidence",
+      "action": "Check the suggestions. Use “+ Apply” only if the suggested statement is true and supported by your records, then review the text."
+    },
+    {
+      "id": "g2-action",
+      "section": "tab1",
+      "title": "Follow your next steps",
+      "action": "Start with “Check your case”, then open a letter draft. Save the result when the model is ready. You review and send the letter through the provider’s official dispute channel."
+    },
+    {
+      "id": "letter",
+      "section": "tab1",
+      "title": "Draft a dispute letter",
+      "action": "Choose “Draft letter”, review the wording and details, then copy or download it. VeriRail does not send the letter for you."
+    },
+    {
+      "id": "save",
+      "section": "tab1",
+      "title": "Save a case snapshot",
+      "action": "Choose “Save snapshot”. Find it in Saved Snapshots below. Review it before sharing a device."
+    },
+    {
+      "id": "vault",
+      "section": "tab1",
+      "title": "Find your saved snapshots",
+      "action": "Scroll through Saved Snapshots. Workspace controls in the header let you switch accounts or clear saved snapshots."
+    },
+    {
+      "id": "g1-controls",
+      "section": "tab2",
+      "title": "Check a payment",
+      "action": "Enter the amount and channel, then set the real transaction history. Read the simulated decision to the right."
+    },
+    {
+      "id": "g1-decision",
+      "section": "tab2",
+      "title": "Read the payment decision",
+      "action": "Read Clear, Step-Up, or Block alongside the risk score. A simulated Clear does not guarantee that a provider will release a payment."
+    },
+    {
+      "id": "g1-split",
+      "section": "tab2",
+      "title": "Explore the split simulation",
+      "action": "Review the modeled comparison. It does not authorize bypassing provider checks or guarantee clearance."
+    },
+    {
+      "id": "g1-band",
+      "section": "tab2",
+      "title": "Understand the decision thresholds",
+      "action": "Compare the marker with the labeled regions and inspect the contributing factors below."
+    },
+    {
+      "id": "g1-batch",
+      "section": "tab2",
+      "title": "Check multiple payments with CSV",
+      "action": "Paste or upload a CSV using the sample column names. Choose “Score CSV”, review the results, and download them if needed."
+    },
+    {
+      "id": "rails-comp",
+      "section": "tab-rails",
+      "title": "Compare payment providers",
+      "action": "Choose Provider A, Provider B, and a product. Review both result cards and their limitations."
+    },
+    {
+      "id": "lab-film",
+      "section": "tab-lab",
+      "title": "Inspect provider context",
+      "action": "Review the scale and shift visualization for the active provider."
+    },
+    {
+      "id": "lab-saliency",
+      "section": "tab-lab",
+      "title": "Explore phrase contributions",
+      "action": "Review the highlighted phrases. Interpret them as model behavior, not proof that a claim is valid."
+    },
+    {
+      "id": "lab-matrix",
+      "section": "tab-lab",
+      "title": "Compare the same case across providers",
+      "action": "Review the provider matrix using the same case description."
+    },
+    {
+      "id": "audit-kpis",
+      "section": "tab3",
+      "title": "Review model evaluation",
+      "action": "Compare the metrics and failure cases. Historical test performance does not guarantee future outcomes."
+    },
+    {
+      "id": "audit-g2",
+      "section": "tab3",
+      "title": "Compare recovery benchmarks",
+      "action": "Read the benchmark table alongside the accuracy note and failure cases."
+    },
+    {
+      "id": "audit-g1",
+      "section": "tab3",
+      "title": "Review false-positive freezes",
+      "action": "Compare the plotted rates and review the audit context."
+    },
+    {
+      "id": "audit-bias",
+      "section": "tab3",
+      "title": "Review fairness and coverage",
+      "action": "Read disparity and coverage together. Removing protected inputs does not establish that every outcome is fair."
+    },
+    {
+      "id": "tab4-qr",
+      "section": "tab4",
+      "title": "Share the app with a QR code",
+      "action": "Enter the hosted URL, check the generated code, and choose “Download QR”. A localhost address will not open from someone else’s phone."
+    }
+  ],
+  "evaluation": {
+    "gate2_benchmarks": [
+      {
+        "model": "B1: Majority Rule (All 0)",
+        "pr_auc": 0.1004,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "brier": 0.1004,
+        "acc": 0.9
+      },
+      {
+        "model": "B2: Company Trailing Rate",
+        "pr_auc": 0.2895,
+        "precision": 0.277,
+        "recall": 0.588,
+        "f1": 0.376,
+        "brier": 0.0781,
+        "acc": 0.804
+      },
+      {
+        "model": "B3: TF-IDF + Tab XGBoost",
+        "pr_auc": 0.3198,
+        "precision": 0.301,
+        "recall": 0.469,
+        "f1": 0.367,
+        "brier": 0.1014,
+        "acc": 0.837
+      },
+      {
+        "model": "Ablation: FiLM Only (No GRL/dCor)",
+        "pr_auc": 0.3476,
+        "precision": 0.328,
+        "recall": 0.5,
+        "f1": 0.396,
+        "brier": 0.0936,
+        "acc": 0.847
+      },
+      {
+        "model": "Full VeriRail Gate 2 (FiLM+GRL+dCor)",
+        "pr_auc": 0.3504,
+        "precision": 0.319,
+        "recall": 0.634,
+        "f1": 0.424,
+        "brier": 0.0982,
+        "acc": 0.827
+      }
+    ],
+    "gate1_benchmarks": [
+      {
+        "model": "B1: Blunt Non-Local / >$500 Rule",
+        "pr_auc": 0.0216,
+        "fp_freeze_nonlocal": 1
+      },
+      {
+        "model": "B2: Temporal XGBoost",
+        "pr_auc": 0.2233,
+        "fp_freeze_nonlocal": 0.0304
+      },
+      {
+        "model": "Full VeriRail Gate 1 (GRL+dCor+Mondrian)",
+        "pr_auc": 0.2929,
+        "fp_freeze_nonlocal": 0.07
+      }
+    ],
+    "fairness_audit": {
+      "matched_pairs": 140,
+      "real_gap": -0.05,
+      "unmitigated_gap": -0.0508,
+      "verirail_gap": -0.0344,
+      "cov_g0": 0.886,
+      "cov_g1": 0.924,
+      "gate1_nonlocal_fp_blunt": 1,
+      "gate1_nonlocal_fp_verirail": 0.07
+    },
+    "warning": "Historical test measurements are not a guarantee of individual or future outcomes."
+  }
+}
