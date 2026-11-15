@@ -1,0 +1,110 @@
+{
+  "gate2_benchmarks": [
+    {
+      "model": "B1: Majority Rule (All 0)",
+      "pr_auc": 0.1004,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "brier": 0.1004,
+      "acc": 0.9
+    },
+    {
+      "model": "B2: Company Trailing Rate",
+      "pr_auc": 0.2895,
+      "precision": 0.277,
+      "recall": 0.588,
+      "f1": 0.376,
+      "brier": 0.0781,
+      "acc": 0.804
+    },
+    {
+      "model": "B3: TF-IDF + Tab XGBoost",
+      "pr_auc": 0.3198,
+      "precision": 0.301,
+      "recall": 0.469,
+      "f1": 0.367,
+      "brier": 0.1014,
+      "acc": 0.837
+    },
+    {
+      "model": "Ablation: FiLM Only (No GRL/dCor)",
+      "pr_auc": 0.3476,
+      "precision": 0.328,
+      "recall": 0.5,
+      "f1": 0.396,
+      "brier": 0.0936,
+      "acc": 0.847
+    },
+    {
+      "model": "Full VeriRail Gate 2 (FiLM+GRL+dCor)",
+      "pr_auc": 0.3504,
+      "precision": 0.319,
+      "recall": 0.634,
+      "f1": 0.424,
+      "brier": 0.0982,
+      "acc": 0.827
+    }
+  ],
+  "gate1_benchmarks": [
+    {
+      "model": "B1: Blunt Non-Local / >$500 Rule",
+      "pr_auc": 0.0216,
+      "fp_freeze_nonlocal": 1.0
+    },
+    {
+      "model": "B2: Temporal XGBoost",
+      "pr_auc": 0.2233,
+      "fp_freeze_nonlocal": 0.0304
+    },
+    {
+      "model": "Full VeriRail Gate 1 (GRL+dCor+Mondrian)",
+      "pr_auc": 0.2929,
+      "fp_freeze_nonlocal": 0.07
+    }
+  ],
+  "fairness_audit": {
+    "matched_pairs": 140,
+    "real_gap": -0.05,
+    "unmitigated_gap": -0.0508,
+    "verirail_gap": -0.0344,
+    "cov_g0": 0.886,
+    "cov_g1": 0.924,
+    "gate1_nonlocal_fp_blunt": 1.0,
+    "gate1_nonlocal_fp_verirail": 0.07
+  },
+  "failures": [
+    {
+      "case_type": "False Positive",
+      "company": "TD BANK US HOLDING COMPANY",
+      "product": "Checking or savings account",
+      "true_y": 0,
+      "pred_p": 0.925,
+      "text_snippet": "Dear Sir/Madam, I originally opened the account with an agreement where I would be reimbursed ATM fees : I was charged XXXX XXXX XXXX XXXX{\\$35}.00} XX/XX/XXXXXXXX XXXX XXXX{\\$35}.00} XX/XX/XXXXXXXX XXXX {$34.00} Total XXXX  {$100.00} I spo..."
+    },
+    {
+      "case_type": "False Positive",
+      "company": "CITIBANK, N.A.",
+      "product": "Money transfer, virtual currency, or money service",
+      "true_y": 0,
+      "pred_p": 0.924,
+      "text_snippet": "Complaint Against Citibank N.A. Missing XXXX  XXXX International Wire Transfer Dear CFPB XXXX, I am filing a complaint against Citibank XXXX. regarding a missing international wire transfer of USD XXXX. \n\nI understand that I am not a direct..."
+    },
+    {
+      "case_type": "False Negative",
+      "company": "SLM CORPORATION",
+      "product": "Debt collection",
+      "true_y": 1,
+      "pred_p": 0.004,
+      "text_snippet": "I have had excessive calls even on sundays for this. \nDates Called : XX/XX/XXXX, XX/XX/XXXX, XX/XX/XXXX ( XXXX ), XX/XX/XXXX, XX/XX/XXXX, XX/XX/XXXX ( XXXX ), XX/XX/XXXX, XX/XX/XXXX, XX/XX/XXXX ( XXXX ), XX/XX/XXXX, XX/XX/XXXX, XX/XX/XXXX (..."
+    },
+    {
+      "case_type": "False Negative",
+      "company": "ALLY FINANCIAL INC.",
+      "product": "Checking or savings account",
+      "true_y": 1,
+      "pred_p": 0.005,
+      "text_snippet": "Last month, scammers hacked into my Ally bank account and initiated a fraudulent wire transfer of roughly {$25000.00}. Before they could succeed in finalizing the transfer, I figured out the scam and cancelled the transfer with Ally. Ally t..."
+    }
+  ]
+}

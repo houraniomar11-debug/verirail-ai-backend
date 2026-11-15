@@ -29,7 +29,7 @@ def load_env():
                 continue
             key, value = raw.split("=", 1)
             key = key.strip()
-            if key in {"OPENAI_API_KEY", "OPENAI_MODEL", "OPENAI_BASE_URL", "VERIRAIL_HOST", "VERIRAIL_PORT", "VERIRAIL_ALLOWED_ORIGINS"}:
+            if key in {"OPENAI_API_KEY", "OPENAI_MODEL", "OPENAI_BASE_URL", "VERIRAIL_HOST", "VERIRAIL_PORT"}:
                 os.environ.setdefault(key, value.strip().strip('"').strip("'"))
 
 
@@ -101,33 +101,6 @@ class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
-    def _cors_origin(self):
-        origin = self.headers.get("Origin", "")
-        if not origin:
-            return None
-        allowed = {item.strip().rstrip("/") for item in os.environ.get("VERIRAIL_ALLOWED_ORIGINS", "").split(",") if item.strip()}
-        if urlparse(origin).netloc == self.headers.get("Host") or origin in allowed:
-            return origin
-        return None
-
-    def end_headers(self):
-        origin = self._cors_origin()
-        if origin:
-            self.send_header("Access-Control-Allow-Origin", origin)
-            self.send_header("Vary", "Origin")
-        super().end_headers()
-
-    def do_OPTIONS(self):
-        if urlparse(self.path).path not in {"/api/assistant", "/api/health"}:
-            return self.json_response(404, {"error": "Not found"})
-        if not self._cors_origin():
-            return self.json_response(403, {"error": "Origin not allowed"})
-        self.send_response(204)
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        self.send_header("Access-Control-Max-Age", "600")
-        self.end_headers()
-
     def json_response(self, status, body):
         data = json.dumps(body).encode("utf-8")
         self.send_response(status)
@@ -140,8 +113,6 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = unquote(urlparse(self.path).path)
-        if path == "/" and not (ROOT / "index.html").is_file():
-            return self.json_response(200, {"service": "VeriRail project AI", "health": "/api/health"})
         if path == "/api/health":
             return self.json_response(200, {"project_ai_configured": bool(os.environ.get("OPENAI_API_KEY"))})
         if path.startswith("/api/"):
@@ -165,7 +136,7 @@ class Handler(SimpleHTTPRequestHandler):
         if urlparse(self.path).path != "/api/assistant":
             return self.json_response(404, {"error": "Not found"})
         origin = self.headers.get("Origin")
-        if origin and not self._cors_origin():
+        if origin and urlparse(origin).netloc != self.headers.get("Host"):
             return self.json_response(403, {"error": "Origin not allowed"})
         try:
             length = int(self.headers.get("Content-Length", "0"))
@@ -204,7 +175,7 @@ class Handler(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     load_env()
-    host, port = os.environ.get("VERIRAIL_HOST", "127.0.0.1"), int(os.environ.get("PORT", os.environ.get("VERIRAIL_PORT", "8080")))
+    host, port = os.environ.get("VERIRAIL_HOST", "127.0.0.1"), int(os.environ.get("VERIRAIL_PORT", "8080"))
     print(f"VeriRail: http://{host}:{port}")
     print("Project AI configured" if os.environ.get("OPENAI_API_KEY") else "Project AI needs OPENAI_API_KEY in the server environment or .env. App guidance remains available.")
     ThreadingHTTPServer((host, port), Handler).serve_forever()
